@@ -5,32 +5,24 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="個人支出まとめ">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="個人支出">
+<meta name="theme-color" content="#0f172a">
 <title>個人支出まとめ</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
   body { background: #0f172a; color: #e2e8f0; font-family: -apple-system, 'Hiragino Sans', sans-serif; min-height: 100vh; }
   #app { max-width: 480px; margin: 0 auto; min-height: 100vh; display: flex; flex-direction: column; }
-
   header { background: #1e293b; border-bottom: 1px solid #334155; position: sticky; top: 0; z-index: 10; padding: 14px 16px; display: flex; align-items: center; gap: 12px; }
   header h1 { font-size: 18px; font-weight: 700; flex: 1; }
   #back-btn { background: none; border: none; color: #60a5fa; font-size: 22px; cursor: pointer; padding: 0 4px; display: none; }
-  #header-action { background: #334155; border: none; color: #94a3b8; font-size: 13px; border-radius: 8px; padding: 6px 12px; cursor: pointer; display: none; }
-
   main { flex: 1; padding: 16px; overflow-y: auto; }
   .screen { display: none; }
   .screen.active { display: block; }
-
-  /* Buttons */
   .btn-primary { width: 100%; padding: 14px; background: #059669; color: #fff; border: none; border-radius: 12px; font-size: 16px; font-weight: 700; cursor: pointer; margin-bottom: 16px; }
-  .btn-danger { width: 100%; padding: 12px; background: transparent; color: #ef4444; border: 1px solid #ef4444; border-radius: 12px; font-size: 14px; cursor: pointer; margin-top: 16px; }
-
-  /* Month selector */
   .month-nav { display: flex; align-items: center; justify-content: space-between; background: #1e293b; border-radius: 12px; padding: 12px 16px; margin-bottom: 16px; }
   .month-nav button { background: none; border: none; color: #60a5fa; font-size: 22px; cursor: pointer; padding: 0 8px; }
   .month-label { font-size: 18px; font-weight: 700; color: #e2e8f0; }
-
-  /* Total box */
   .total-box { background: #1e293b; border-radius: 14px; padding: 20px; margin-bottom: 16px; }
   .total-label { font-size: 13px; color: #64748b; text-align: center; }
   .total-amount { font-size: 36px; font-weight: 800; color: #34d399; margin: 4px 0 16px; text-align: center; }
@@ -38,8 +30,6 @@
   .cat-row { display: flex; justify-content: space-between; align-items: center; font-size: 14px; color: #94a3b8; }
   .bar-row { display: flex; height: 6px; border-radius: 4px; overflow: hidden; background: #334155; margin-bottom: 12px; }
   .bar-seg { height: 100%; }
-
-  /* Expense card */
   .exp-card { background: #1e293b; border-radius: 12px; padding: 14px; margin-bottom: 10px; }
   .exp-badge { display: inline-block; font-size: 12px; color: #fff; border-radius: 6px; padding: 2px 8px; margin-bottom: 6px; }
   .exp-row { display: flex; justify-content: space-between; align-items: center; }
@@ -47,21 +37,13 @@
   .exp-date { font-size: 12px; color: #64748b; margin-top: 4px; }
   .exp-memo { font-size: 13px; color: #64748b; margin-top: 4px; }
   .del-btn { background: none; border: none; font-size: 18px; cursor: pointer; padding: 4px; }
-
-  /* Form */
   .form { display: flex; flex-direction: column; gap: 12px; }
   .form label { font-size: 13px; color: #94a3b8; font-weight: 600; }
   .form input { padding: 13px 14px; background: #1e293b; border: 1px solid #334155; border-radius: 10px; color: #e2e8f0; font-size: 16px; outline: none; width: 100%; }
-
-  /* Category grid */
   .cat-grid { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 8px; }
   .cat-btn { padding: 10px 4px; background: #1e293b; border: 2px solid #334155; border-radius: 10px; color: #94a3b8; font-size: 12px; cursor: pointer; line-height: 1.6; transition: all 0.15s; text-align: center; }
   .cat-btn.active { color: #fff; }
-
-  /* Empty */
   .empty { text-align: center; color: #64748b; padding: 40px 0; }
-
-  /* Legend */
   .legend-row { display: flex; align-items: center; gap: 6px; }
   .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
 </style>
@@ -71,10 +53,8 @@
   <header>
     <button id="back-btn" onclick="goBack()">←</button>
     <h1 id="header-title">💰 個人支出まとめ</h1>
-    <button id="header-action"></button>
   </header>
   <main>
-    <!-- LIST -->
     <div id="screen-list" class="screen active">
       <div class="month-nav">
         <button onclick="changeMonth(-1)">‹</button>
@@ -90,8 +70,6 @@
       <button class="btn-primary" onclick="showScreen('newExpense')">＋ レシートを入力</button>
       <div id="expense-list"></div>
     </div>
-
-    <!-- NEW EXPENSE -->
     <div id="screen-newExpense" class="screen">
       <div class="form">
         <label>日付</label>
@@ -107,137 +85,67 @@
     </div>
   </main>
 </div>
-
 <script>
 const CATS = [
-  { id: 'food',      label: '食費',     emoji: '🍱', color: '#F59E0B' },
-  { id: 'transport', label: '交通費',   emoji: '🚃', color: '#3B82F6' },
-  { id: 'daily',     label: '日用品',   emoji: '🛒', color: '#10B981' },
-  { id: 'leisure',   label: '娯楽',     emoji: '🎮', color: '#8B5CF6' },
-  { id: 'medical',   label: '医療費',   emoji: '💊', color: '#EF4444' },
-  { id: 'kyudo',     label: '弓道',     emoji: '🏹', color: '#DC2626' },
-  { id: 'other',     label: 'その他',   emoji: '📦', color: '#6B7280' },
+  { id: 'food',      label: '食費',   emoji: '🍱', color: '#F59E0B' },
+  { id: 'transport', label: '交通費', emoji: '🚃', color: '#3B82F6' },
+  { id: 'daily',     label: '日用品', emoji: '🛒', color: '#10B981' },
+  { id: 'leisure',   label: '娯楽',   emoji: '🎮', color: '#8B5CF6' },
+  { id: 'medical',   label: '医療費', emoji: '💊', color: '#EF4444' },
+  { id: 'kyudo',     label: '弓道',   emoji: '🏹', color: '#DC2626' },
+  { id: 'other',     label: 'その他', emoji: '📦', color: '#6B7280' },
 ];
-
 let expenses = JSON.parse(localStorage.getItem('personal_expenses') || '[]');
 let selectedCat = 'food';
 let currentScreen = 'list';
-
 const now = new Date();
 let viewYear = now.getFullYear();
-let viewMonth = now.getMonth(); // 0-indexed
-
+let viewMonth = now.getMonth();
 function save() { localStorage.setItem('personal_expenses', JSON.stringify(expenses)); }
 function genId() { return Date.now().toString(36) + Math.random().toString(36).slice(2); }
 function yen(n) { return '¥' + Number(n).toLocaleString('ja-JP'); }
-
 function monthExpenses() {
-  return expenses.filter(e => {
-    const d = new Date(e.date);
-    return d.getFullYear() === viewYear && d.getMonth() === viewMonth;
-  }).sort((a, b) => b.date.localeCompare(a.date));
+  return expenses.filter(e => { const d = new Date(e.date); return d.getFullYear() === viewYear && d.getMonth() === viewMonth; }).sort((a, b) => b.date.localeCompare(a.date));
 }
-
 function total(list) { return list.reduce((s, e) => s + e.amount, 0); }
 function catTotal(list, cat) { return list.filter(e => e.category === cat).reduce((s, e) => s + e.amount, 0); }
-
 function changeMonth(dir) {
   viewMonth += dir;
   if (viewMonth > 11) { viewMonth = 0; viewYear++; }
   if (viewMonth < 0)  { viewMonth = 11; viewYear--; }
   renderList();
 }
-
 function showScreen(name) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById('screen-' + name).classList.add('active');
   currentScreen = name;
-
   const backBtn = document.getElementById('back-btn');
   const title = document.getElementById('header-title');
-
-  if (name === 'list') {
-    backBtn.style.display = 'none';
-    title.textContent = '💰 個人支出まとめ';
-    renderList();
-  } else if (name === 'newExpense') {
-    backBtn.style.display = 'block';
-    title.textContent = 'レシートを入力';
+  if (name === 'list') { backBtn.style.display = 'none'; title.textContent = '💰 個人支出まとめ'; renderList(); }
+  else if (name === 'newExpense') {
+    backBtn.style.display = 'block'; title.textContent = 'レシートを入力';
     document.getElementById('exp-date').value = new Date().toISOString().slice(0, 10);
     document.getElementById('exp-amount').value = '';
     document.getElementById('exp-memo').value = '';
-    selectedCat = 'food';
-    renderCatGrid();
+    selectedCat = 'food'; renderCatGrid();
   }
 }
-
 function goBack() { showScreen('list'); }
-
 function renderList() {
-  // Month label
   document.getElementById('month-label').textContent = `${viewYear}年${viewMonth + 1}月`;
-
   const list = monthExpenses();
   const t = total(list);
   document.getElementById('list-total').textContent = yen(t);
-
-  // Bar
-  const bar = document.getElementById('list-bar');
-  bar.innerHTML = CATS.map(c => {
-    const pct = t > 0 ? (catTotal(list, c.id) / t * 100) : 0;
-    return pct > 0 ? `<div class="bar-seg" style="width:${pct}%;background:${c.color}"></div>` : '';
-  }).join('');
-
-  // Breakdown
-  document.getElementById('list-breakdown').innerHTML = CATS
-    .filter(c => catTotal(list, c.id) > 0)
-    .map(c => `
-      <div class="cat-row">
-        <div class="legend-row">
-          <span class="dot" style="background:${c.color}"></span>
-          <span>${c.emoji} ${c.label}</span>
-        </div>
-        <span style="color:${c.color};font-weight:700">${yen(catTotal(list, c.id))}</span>
-      </div>`)
-    .join('') || '<div style="text-align:center;color:#64748b;font-size:13px">まだ入力がありません</div>';
-
-  // Expense list
+  document.getElementById('list-bar').innerHTML = CATS.map(c => { const pct = t > 0 ? (catTotal(list, c.id) / t * 100) : 0; return pct > 0 ? `<div class="bar-seg" style="width:${pct}%;background:${c.color}"></div>` : ''; }).join('');
+  document.getElementById('list-breakdown').innerHTML = CATS.filter(c => catTotal(list, c.id) > 0).map(c => `<div class="cat-row"><div class="legend-row"><span class="dot" style="background:${c.color}"></span><span>${c.emoji} ${c.label}</span></div><span style="color:${c.color};font-weight:700">${yen(catTotal(list, c.id))}</span></div>`).join('') || '<div style="text-align:center;color:#64748b;font-size:13px">まだ入力がありません</div>';
   const el = document.getElementById('expense-list');
-  if (list.length === 0) {
-    el.innerHTML = '<div class="empty"><p>レシートがまだありません</p></div>';
-    return;
-  }
-  el.innerHTML = list.map(e => {
-    const cat = CATS.find(c => c.id === e.category);
-    const d = new Date(e.date);
-    const dateStr = `${d.getMonth()+1}/${d.getDate()}`;
-    return `
-      <div class="exp-card">
-        <div class="exp-badge" style="background:${cat.color}">${cat.emoji} ${cat.label}</div>
-        <div class="exp-row">
-          <span class="exp-amount">${yen(e.amount)}</span>
-          <button class="del-btn" onclick="deleteExpense('${e.id}')">🗑</button>
-        </div>
-        <div class="exp-date">${dateStr}</div>
-        ${e.memo ? `<div class="exp-memo">${e.memo}</div>` : ''}
-      </div>`;
-  }).join('');
+  if (list.length === 0) { el.innerHTML = '<div class="empty"><p>レシートがまだありません</p></div>'; return; }
+  el.innerHTML = list.map(e => { const cat = CATS.find(c => c.id === e.category); const d = new Date(e.date); return `<div class="exp-card"><div class="exp-badge" style="background:${cat.color}">${cat.emoji} ${cat.label}</div><div class="exp-row"><span class="exp-amount">${yen(e.amount)}</span><button class="del-btn" onclick="deleteExpense('${e.id}')">🗑</button></div><div class="exp-date">${d.getMonth()+1}/${d.getDate()}</div>${e.memo ? `<div class="exp-memo">${e.memo}</div>` : ''}</div>`; }).join('');
 }
-
 function renderCatGrid() {
-  document.getElementById('cat-grid').innerHTML = CATS.map(c => `
-    <button class="cat-btn ${selectedCat === c.id ? 'active' : ''}"
-      style="${selectedCat === c.id ? `background:${c.color};border-color:${c.color}` : ''}"
-      onclick="selectCat('${c.id}')">
-      ${c.emoji}<br>${c.label}
-    </button>`).join('');
+  document.getElementById('cat-grid').innerHTML = CATS.map(c => `<button class="cat-btn ${selectedCat === c.id ? 'active' : ''}" style="${selectedCat === c.id ? `background:${c.color};border-color:${c.color}` : ''}" onclick="selectCat('${c.id}')">${c.emoji}<br>${c.label}</button>`).join('');
 }
-
-function selectCat(id) {
-  selectedCat = id;
-  renderCatGrid();
-}
-
+function selectCat(id) { selectedCat = id; renderCatGrid(); }
 function addExpense() {
   const amount = Number(document.getElementById('exp-amount').value);
   const memo = document.getElementById('exp-memo').value.trim();
@@ -245,21 +153,16 @@ function addExpense() {
   if (!amount || isNaN(amount)) { alert('金額を入力してください'); return; }
   expenses.push({ id: genId(), date, category: selectedCat, amount, memo });
   save();
-  // Update view to the month of added expense
-  const d = new Date(date);
-  viewYear = d.getFullYear();
-  viewMonth = d.getMonth();
+  const d = new Date(date); viewYear = d.getFullYear(); viewMonth = d.getMonth();
   showScreen('list');
 }
-
 function deleteExpense(id) {
   if (!confirm('この支出を削除しますか？')) return;
-  expenses = expenses.filter(e => e.id !== id);
-  save();
-  renderList();
+  expenses = expenses.filter(e => e.id !== id); save(); renderList();
 }
-
-// Init
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/my-apps/sw.js').catch(() => {});
+}
 showScreen('list');
 </script>
 </body>

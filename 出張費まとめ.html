@@ -5,34 +5,23 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="出張費まとめ">
+<meta name="theme-color" content="#0f172a">
 <title>出張費まとめ</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
   body { background: #0f172a; color: #e2e8f0; font-family: -apple-system, 'Hiragino Sans', sans-serif; min-height: 100vh; }
-
   #app { max-width: 480px; margin: 0 auto; min-height: 100vh; display: flex; flex-direction: column; }
-
   header { background: #1e293b; border-bottom: 1px solid #334155; position: sticky; top: 0; z-index: 10; padding: 14px 16px; display: flex; align-items: center; gap: 12px; }
   header h1 { font-size: 18px; font-weight: 700; flex: 1; }
   #back-btn { background: none; border: none; color: #60a5fa; font-size: 22px; cursor: pointer; padding: 0 4px; display: none; }
   #header-action { background: #334155; border: none; color: #94a3b8; font-size: 13px; border-radius: 8px; padding: 6px 12px; cursor: pointer; display: none; }
-
   main { flex: 1; padding: 16px; overflow-y: auto; }
-
   .screen { display: none; }
   .screen.active { display: block; }
-
-  /* Buttons */
   .btn-primary { width: 100%; padding: 14px; background: #1d4ed8; color: #fff; border: none; border-radius: 12px; font-size: 16px; font-weight: 700; cursor: pointer; margin-bottom: 16px; }
   .btn-danger { width: 100%; padding: 12px; background: transparent; color: #ef4444; border: 1px solid #ef4444; border-radius: 12px; font-size: 14px; cursor: pointer; margin-top: 24px; }
-
-  /* Form */
-  .form { display: flex; flex-direction: column; gap: 12px; }
-  .form label { font-size: 13px; color: #94a3b8; font-weight: 600; }
-  .form input { padding: 13px 14px; background: #1e293b; border: 1px solid #334155; border-radius: 10px; color: #e2e8f0; font-size: 16px; outline: none; width: 100%; }
-
-  /* Trip card */
   .card { background: #1e293b; border-radius: 14px; padding: 16px; margin-bottom: 12px; cursor: pointer; border: 2px solid transparent; }
   .card.selected { border-color: #60a5fa; }
   .card-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; }
@@ -44,32 +33,23 @@
   .card-legend { display: flex; flex-wrap: wrap; gap: 8px; }
   .legend-item { display: flex; align-items: center; gap: 4px; font-size: 12px; color: #94a3b8; }
   .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
-
-  /* Total box */
+  .empty { text-align: center; color: #64748b; padding: 40px 0; }
+  .form { display: flex; flex-direction: column; gap: 12px; }
+  .form label { font-size: 13px; color: #94a3b8; font-weight: 600; }
+  .form input { padding: 13px 14px; background: #1e293b; border: 1px solid #334155; border-radius: 10px; color: #e2e8f0; font-size: 16px; outline: none; width: 100%; }
   .total-box { background: #1e293b; border-radius: 14px; padding: 20px; margin-bottom: 16px; text-align: center; }
   .total-label { font-size: 13px; color: #64748b; }
   .total-amount { font-size: 36px; font-weight: 800; color: #60a5fa; margin: 4px 0 12px; }
   .cat-breakdown { display: flex; flex-direction: column; gap: 6px; }
   .cat-row { display: flex; justify-content: space-between; font-size: 14px; color: #94a3b8; }
-
-  /* Expense card */
   .exp-card { background: #1e293b; border-radius: 12px; padding: 14px; margin-bottom: 10px; }
   .exp-badge { display: inline-block; font-size: 12px; color: #fff; border-radius: 6px; padding: 2px 8px; margin-bottom: 6px; }
   .exp-row { display: flex; justify-content: space-between; align-items: center; }
   .exp-amount { font-size: 20px; font-weight: 700; color: #e2e8f0; }
   .del-btn { background: none; border: none; font-size: 18px; cursor: pointer; padding: 4px; }
   .exp-memo { font-size: 13px; color: #64748b; margin-top: 4px; }
-
-  /* Category grid */
   .cat-grid { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 8px; }
   .cat-btn { padding: 12px 4px; background: #1e293b; border: 2px solid #334155; border-radius: 10px; color: #94a3b8; font-size: 13px; cursor: pointer; line-height: 1.6; transition: all 0.15s; }
-  .cat-btn.active { color: #fff; }
-
-  /* Empty state */
-  .empty { text-align: center; color: #64748b; padding: 40px 0; }
-  .empty p { margin-bottom: 6px; }
-
-  /* Compare */
   .compare-hint { font-size: 13px; color: #64748b; margin-bottom: 12px; }
   .check-mark { color: #60a5fa; font-size: 20px; font-weight: 700; }
   .compare-table { background: #1e293b; border-radius: 14px; padding: 16px; margin-top: 16px; overflow-x: auto; }
@@ -78,7 +58,7 @@
   .compare-cell { flex: 1; font-size: 13px; color: #94a3b8; min-width: 80px; line-height: 1.5; }
   .compare-cell.header { font-weight: 700; color: #e2e8f0; }
   .compare-cell.high { color: #FBBF24; font-weight: 700; }
-  .compare-cell.total { font-weight: 700; }
+  .compare-cell.total-cell { font-weight: 700; }
 </style>
 </head>
 <body>
@@ -89,13 +69,10 @@
     <button id="header-action"></button>
   </header>
   <main>
-    <!-- LIST -->
     <div id="screen-list" class="screen active">
       <button class="btn-primary" onclick="showScreen('newTrip')">＋ 出張を追加</button>
       <div id="trip-list"></div>
     </div>
-
-    <!-- NEW TRIP -->
     <div id="screen-newTrip" class="screen">
       <div class="form">
         <label>出張名・行き先</label>
@@ -105,8 +82,6 @@
         <button class="btn-primary" onclick="addTrip()">追加する</button>
       </div>
     </div>
-
-    <!-- DETAIL -->
     <div id="screen-detail" class="screen">
       <div class="total-box">
         <div class="total-label">合計金額</div>
@@ -117,8 +92,6 @@
       <div id="expense-list"></div>
       <button class="btn-danger" onclick="deleteCurrentTrip()">この出張を削除</button>
     </div>
-
-    <!-- NEW EXPENSE -->
     <div id="screen-newExpense" class="screen">
       <div class="form">
         <label>種類</label>
@@ -130,8 +103,6 @@
         <button class="btn-primary" onclick="addExpense()">追加する</button>
       </div>
     </div>
-
-    <!-- COMPARE -->
     <div id="screen-compare" class="screen">
       <p class="compare-hint">比較したい出張を最大3つ選んでください</p>
       <div id="compare-list"></div>
@@ -139,7 +110,6 @@
     </div>
   </main>
 </div>
-
 <script>
 const CATS = [
   { id: 'transport', label: '交通費', emoji: '🚃', color: '#3B82F6' },
@@ -147,13 +117,11 @@ const CATS = [
   { id: 'meal',      label: '飲食費', emoji: '🍱', color: '#F59E0B' },
   { id: 'other',     label: 'その他', emoji: '📦', color: '#6B7280' },
 ];
-
 let trips = JSON.parse(localStorage.getItem('trips') || '[]');
 let currentTripId = null;
 let selectedCat = 'transport';
 let compareIds = [];
 let currentScreen = 'list';
-
 function save() { localStorage.setItem('trips', JSON.stringify(trips)); }
 function genId() { return Date.now().toString(36) + Math.random().toString(36).slice(2); }
 function yen(n) { return '¥' + Number(n).toLocaleString('ja-JP'); }
@@ -164,220 +132,99 @@ function showScreen(name) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById('screen-' + name).classList.add('active');
   currentScreen = name;
-
   const backBtn = document.getElementById('back-btn');
   const actionBtn = document.getElementById('header-action');
   const title = document.getElementById('header-title');
-
   backBtn.style.display = 'none';
   actionBtn.style.display = 'none';
-
   if (name === 'list') {
     title.textContent = '✈️ 出張費まとめ';
-    if (trips.length >= 2) {
-      actionBtn.style.display = 'block';
-      actionBtn.textContent = '比較';
-      actionBtn.onclick = () => { compareIds = []; showScreen('compare'); renderCompare(); };
-    }
+    if (trips.length >= 2) { actionBtn.style.display = 'block'; actionBtn.textContent = '比較'; actionBtn.onclick = () => { compareIds = []; showScreen('compare'); renderCompare(); }; }
     renderList();
   } else if (name === 'newTrip') {
-    title.textContent = '新しい出張';
-    backBtn.style.display = 'block';
+    title.textContent = '新しい出張'; backBtn.style.display = 'block';
     document.getElementById('trip-date').value = new Date().toISOString().slice(0, 10);
     document.getElementById('trip-name').value = '';
   } else if (name === 'detail') {
     const t = trips.find(x => x.id === currentTripId);
-    title.textContent = t ? t.name : '';
-    backBtn.style.display = 'block';
-    renderDetail();
+    title.textContent = t ? t.name : ''; backBtn.style.display = 'block'; renderDetail();
   } else if (name === 'newExpense') {
-    title.textContent = '費用を追加';
-    backBtn.style.display = 'block';
+    title.textContent = '費用を追加'; backBtn.style.display = 'block';
     document.getElementById('exp-amount').value = '';
     document.getElementById('exp-memo').value = '';
-    selectedCat = 'transport';
-    renderCatGrid();
+    selectedCat = 'transport'; renderCatGrid();
   } else if (name === 'compare') {
-    title.textContent = '出張比較';
-    backBtn.style.display = 'block';
-    renderCompare();
+    title.textContent = '出張比較'; backBtn.style.display = 'block'; renderCompare();
   }
 }
-
 function goBack() {
   if (currentScreen === 'detail' || currentScreen === 'compare') showScreen('list');
   else if (currentScreen === 'newExpense') showScreen('detail');
   else showScreen('list');
 }
-
-// ── Render list ──
 function renderList() {
   const el = document.getElementById('trip-list');
-  if (trips.length === 0) {
-    el.innerHTML = '<div class="empty"><p>出張がまだありません</p><p style="font-size:13px">上のボタンから追加してください</p></div>';
-    return;
-  }
+  if (trips.length === 0) { el.innerHTML = '<div class="empty"><p>出張がまだありません</p><p style="font-size:13px">上のボタンから追加してください</p></div>'; return; }
   el.innerHTML = trips.map(t => {
     const total = tripTotal(t);
-    const bars = CATS.map(c => {
-      const pct = total > 0 ? (catTotal(t, c.id) / total * 100) : 0;
-      return pct > 0 ? `<div class="bar-seg" style="width:${pct}%;background:${c.color}"></div>` : '';
-    }).join('');
-    const legend = CATS.filter(c => catTotal(t, c.id) > 0).map(c =>
-      `<span class="legend-item"><span class="dot" style="background:${c.color}"></span>${c.emoji} ${yen(catTotal(t, c.id))}</span>`
-    ).join('');
-    return `
-      <div class="card" onclick="openTrip('${t.id}')">
-        <div class="card-top">
-          <div>
-            <div class="card-name">${t.name}</div>
-            <div class="card-date">${t.date}</div>
-          </div>
-          <div class="card-total">${yen(total)}</div>
-        </div>
-        <div class="bar-row">${bars}</div>
-        <div class="card-legend">${legend}</div>
-      </div>`;
+    const bars = CATS.map(c => { const pct = total > 0 ? (catTotal(t, c.id) / total * 100) : 0; return pct > 0 ? `<div class="bar-seg" style="width:${pct}%;background:${c.color}"></div>` : ''; }).join('');
+    const legend = CATS.filter(c => catTotal(t, c.id) > 0).map(c => `<span class="legend-item"><span class="dot" style="background:${c.color}"></span>${c.emoji} ${yen(catTotal(t, c.id))}</span>`).join('');
+    return `<div class="card" onclick="openTrip('${t.id}')"><div class="card-top"><div><div class="card-name">${t.name}</div><div class="card-date">${t.date}</div></div><div class="card-total">${yen(total)}</div></div><div class="bar-row">${bars}</div><div class="card-legend">${legend}</div></div>`;
   }).join('');
 }
-
-function openTrip(id) {
-  currentTripId = id;
-  showScreen('detail');
-}
-
-// ── Render detail ──
+function openTrip(id) { currentTripId = id; showScreen('detail'); }
 function renderDetail() {
   const t = trips.find(x => x.id === currentTripId);
   if (!t) return;
-  const total = tripTotal(t);
-  document.getElementById('detail-total').textContent = yen(total);
-  document.getElementById('detail-breakdown').innerHTML = CATS
-    .filter(c => catTotal(t, c.id) > 0)
-    .map(c => `<div class="cat-row"><span>${c.emoji} ${c.label}</span><span style="color:${c.color};font-weight:700">${yen(catTotal(t, c.id))}</span></div>`)
-    .join('');
-
+  document.getElementById('detail-total').textContent = yen(tripTotal(t));
+  document.getElementById('detail-breakdown').innerHTML = CATS.filter(c => catTotal(t, c.id) > 0).map(c => `<div class="cat-row"><span>${c.emoji} ${c.label}</span><span style="color:${c.color};font-weight:700">${yen(catTotal(t, c.id))}</span></div>`).join('');
   const expList = document.getElementById('expense-list');
-  if (t.expenses.length === 0) {
-    expList.innerHTML = '<div class="empty"><p>費用がまだありません</p></div>';
-    return;
-  }
-  expList.innerHTML = [...t.expenses].reverse().map(e => {
-    const cat = CATS.find(c => c.id === e.category);
-    return `
-      <div class="exp-card">
-        <div class="exp-badge" style="background:${cat.color}">${cat.emoji} ${cat.label}</div>
-        <div class="exp-row">
-          <span class="exp-amount">${yen(e.amount)}</span>
-          <button class="del-btn" onclick="deleteExpense('${e.id}')">🗑</button>
-        </div>
-        ${e.memo ? `<div class="exp-memo">${e.memo}</div>` : ''}
-      </div>`;
-  }).join('');
+  if (t.expenses.length === 0) { expList.innerHTML = '<div class="empty"><p>費用がまだありません</p></div>'; return; }
+  expList.innerHTML = [...t.expenses].reverse().map(e => { const cat = CATS.find(c => c.id === e.category); return `<div class="exp-card"><div class="exp-badge" style="background:${cat.color}">${cat.emoji} ${cat.label}</div><div class="exp-row"><span class="exp-amount">${yen(e.amount)}</span><button class="del-btn" onclick="deleteExpense('${e.id}')">🗑</button></div>${e.memo ? `<div class="exp-memo">${e.memo}</div>` : ''}</div>`; }).join('');
 }
-
-// ── Category grid ──
 function renderCatGrid() {
-  document.getElementById('cat-grid').innerHTML = CATS.map(c => `
-    <button class="cat-btn ${selectedCat === c.id ? 'active' : ''}"
-      style="${selectedCat === c.id ? `background:${c.color};border-color:${c.color}` : ''}"
-      onclick="selectCat('${c.id}', '${c.color}')">
-      ${c.emoji}<br>${c.label}
-    </button>`).join('');
+  document.getElementById('cat-grid').innerHTML = CATS.map(c => `<button class="cat-btn ${selectedCat === c.id ? 'active' : ''}" style="${selectedCat === c.id ? `background:${c.color};border-color:${c.color};color:#fff` : ''}" onclick="selectCat('${c.id}')">${c.emoji}<br>${c.label}</button>`).join('');
 }
-
-function selectCat(id, color) {
-  selectedCat = id;
-  renderCatGrid();
-}
-
-// ── Actions ──
+function selectCat(id) { selectedCat = id; renderCatGrid(); }
 function addTrip() {
   const name = document.getElementById('trip-name').value.trim();
   const date = document.getElementById('trip-date').value;
   if (!name) { alert('出張名を入力してください'); return; }
-  trips.unshift({ id: genId(), name, date, expenses: [] });
-  save();
-  showScreen('list');
+  trips.unshift({ id: genId(), name, date, expenses: [] }); save(); showScreen('list');
 }
-
 function addExpense() {
   const amount = Number(document.getElementById('exp-amount').value);
   const memo = document.getElementById('exp-memo').value.trim();
   if (!amount || isNaN(amount)) { alert('金額を入力してください'); return; }
   const t = trips.find(x => x.id === currentTripId);
   if (!t) return;
-  t.expenses.push({ id: genId(), category: selectedCat, amount, memo });
-  save();
-  showScreen('detail');
+  t.expenses.push({ id: genId(), category: selectedCat, amount, memo }); save(); showScreen('detail');
 }
-
 function deleteExpense(expId) {
   if (!confirm('この費用を削除しますか？')) return;
   const t = trips.find(x => x.id === currentTripId);
   if (!t) return;
-  t.expenses = t.expenses.filter(e => e.id !== expId);
-  save();
-  renderDetail();
+  t.expenses = t.expenses.filter(e => e.id !== expId); save(); renderDetail();
 }
-
 function deleteCurrentTrip() {
   if (!confirm('この出張を削除しますか？')) return;
-  trips = trips.filter(t => t.id !== currentTripId);
-  save();
-  showScreen('list');
+  trips = trips.filter(t => t.id !== currentTripId); save(); showScreen('list');
 }
-
-// ── Compare ──
 function renderCompare() {
-  document.getElementById('compare-list').innerHTML = trips.map(t => `
-    <div class="card ${compareIds.includes(t.id) ? 'selected' : ''}" onclick="toggleCompare('${t.id}')">
-      <div class="card-top">
-        <div>
-          <div class="card-name">${t.name}</div>
-          <div class="card-date">${t.date}</div>
-        </div>
-        <div style="display:flex;align-items:center;gap:8px">
-          <div class="card-total">${yen(tripTotal(t))}</div>
-          ${compareIds.includes(t.id) ? '<span class="check-mark">✓</span>' : ''}
-        </div>
-      </div>
-    </div>`).join('');
-
-  if (compareIds.length < 2) {
-    document.getElementById('compare-table').innerHTML = '';
-    return;
-  }
+  document.getElementById('compare-list').innerHTML = trips.map(t => `<div class="card ${compareIds.includes(t.id) ? 'selected' : ''}" onclick="toggleCompare('${t.id}')"><div class="card-top"><div><div class="card-name">${t.name}</div><div class="card-date">${t.date}</div></div><div style="display:flex;align-items:center;gap:8px"><div class="card-total">${yen(tripTotal(t))}</div>${compareIds.includes(t.id) ? '<span class="check-mark">✓</span>' : ''}</div></div></div>`).join('');
+  if (compareIds.length < 2) { document.getElementById('compare-table').innerHTML = ''; return; }
   const selected = compareIds.map(id => trips.find(t => t.id === id));
   const allRows = [...CATS, { id: '_total', label: '合計', emoji: '💴' }];
-
-  document.getElementById('compare-table').innerHTML = `
-    <div class="compare-table">
-      <div class="compare-header">
-        <div class="compare-cell"></div>
-        ${selected.map(t => `<div class="compare-cell header">${t.name}<br><span style="font-size:11px;color:#94a3b8">${t.date}</span></div>`).join('')}
-      </div>
-      ${allRows.map(c => {
-        const vals = selected.map(t => c.id === '_total' ? tripTotal(t) : catTotal(t, c.id));
-        const max = Math.max(...vals);
-        return `<div class="compare-row">
-          <div class="compare-cell">${c.emoji} ${c.label}</div>
-          ${vals.map(v => `<div class="compare-cell ${v === max && v > 0 ? 'high' : ''} ${c.id === '_total' ? 'total' : ''}">${v > 0 ? yen(v) : '—'}</div>`).join('')}
-        </div>`;
-      }).join('')}
-    </div>`;
+  document.getElementById('compare-table').innerHTML = `<div class="compare-table"><div class="compare-header"><div class="compare-cell"></div>${selected.map(t => `<div class="compare-cell header">${t.name}<br><span style="font-size:11px;color:#94a3b8">${t.date}</span></div>`).join('')}</div>${allRows.map(c => { const vals = selected.map(t => c.id === '_total' ? tripTotal(t) : catTotal(t, c.id)); const max = Math.max(...vals); return `<div class="compare-row"><div class="compare-cell">${c.emoji} ${c.label}</div>${vals.map(v => `<div class="compare-cell ${v === max && v > 0 ? 'high' : ''} ${c.id === '_total' ? 'total-cell' : ''}">${v > 0 ? yen(v) : '—'}</div>`).join('')}</div>`; }).join('')}</div>`;
 }
-
 function toggleCompare(id) {
-  if (compareIds.includes(id)) {
-    compareIds = compareIds.filter(x => x !== id);
-  } else if (compareIds.length < 3) {
-    compareIds.push(id);
-  }
+  if (compareIds.includes(id)) { compareIds = compareIds.filter(x => x !== id); }
+  else if (compareIds.length < 3) { compareIds.push(id); }
   renderCompare();
 }
-
-// Init
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/my-apps/sw.js').catch(() => {});
+}
 showScreen('list');
 </script>
 </body>
