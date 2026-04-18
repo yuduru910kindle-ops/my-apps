@@ -1,12 +1,11 @@
-const CACHE = 'my-apps-v1';
-const FILES = [
-  '/my-apps/個人支出まとめ.html',
-  '/my-apps/出張費まとめ.html',
-];
+const CACHE = 'my-apps-v' + Date.now();
 
 self.addEventListener('install', e => {
   e.waitUntil(
-    caches.open(CACHE).then(c => c.addAll(FILES))
+    caches.open(CACHE).then(c => c.addAll([
+      '/my-apps/個人支出まとめ.html',
+      '/my-apps/出張費まとめ.html',
+    ]))
   );
   self.skipWaiting();
 });
@@ -22,6 +21,6 @@ self.addEventListener('activate', e => {
 
 self.addEventListener('fetch', e => {
   e.respondWith(
-    caches.match(e.request).then(r => r || fetch(e.request))
+    fetch(e.request).catch(() => caches.match(e.request))
   );
 });
