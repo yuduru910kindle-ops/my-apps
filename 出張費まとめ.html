@@ -17,10 +17,13 @@
   header h1 { font-size: 18px; font-weight: 700; flex: 1; }
   #back-btn { background: none; border: none; color: #60a5fa; font-size: 22px; cursor: pointer; padding: 0 4px; display: none; }
   #header-action { background: #334155; border: none; color: #94a3b8; font-size: 13px; border-radius: 8px; padding: 6px 12px; cursor: pointer; display: none; }
+  #menu-btn { background: none; border: none; color: #94a3b8; font-size: 22px; cursor: pointer; padding: 0 4px; }
   main { flex: 1; padding: 16px; overflow-y: auto; }
   .screen { display: none; }
   .screen.active { display: block; }
   .btn-primary { width: 100%; padding: 14px; background: #1d4ed8; color: #fff; border: none; border-radius: 12px; font-size: 16px; font-weight: 700; cursor: pointer; margin-bottom: 16px; }
+  .btn-secondary { width: 100%; padding: 12px; background: #334155; color: #e2e8f0; border: none; border-radius: 12px; font-size: 14px; font-weight: 600; cursor: pointer; margin-bottom: 10px; }
+  .btn-warning { width: 100%; padding: 12px; background: transparent; color: #f59e0b; border: 1px solid #f59e0b; border-radius: 12px; font-size: 14px; cursor: pointer; margin-bottom: 10px; }
   .btn-danger { width: 100%; padding: 12px; background: transparent; color: #ef4444; border: 1px solid #ef4444; border-radius: 12px; font-size: 14px; cursor: pointer; margin-top: 24px; }
   .card { background: #1e293b; border-radius: 14px; padding: 16px; margin-bottom: 12px; cursor: pointer; border: 2px solid transparent; }
   .card.selected { border-color: #60a5fa; }
@@ -36,7 +39,8 @@
   .empty { text-align: center; color: #64748b; padding: 40px 0; }
   .form { display: flex; flex-direction: column; gap: 12px; }
   .form label { font-size: 13px; color: #94a3b8; font-weight: 600; }
-  .form input { padding: 13px 14px; background: #1e293b; border: 1px solid #334155; border-radius: 10px; color: #e2e8f0; font-size: 16px; outline: none; width: 100%; }
+  .form input, .form textarea { padding: 13px 14px; background: #1e293b; border: 1px solid #334155; border-radius: 10px; color: #e2e8f0; font-size: 16px; outline: none; width: 100%; }
+  .form textarea { height: 120px; resize: none; font-size: 12px; }
   .total-box { background: #1e293b; border-radius: 14px; padding: 20px; margin-bottom: 16px; text-align: center; }
   .total-label { font-size: 13px; color: #64748b; }
   .total-amount { font-size: 36px; font-weight: 800; color: #60a5fa; margin: 4px 0 12px; }
@@ -62,6 +66,8 @@
   .compare-cell.header { font-weight: 700; color: #e2e8f0; }
   .compare-cell.high { color: #FBBF24; font-weight: 700; }
   .compare-cell.total-cell { font-weight: 700; }
+  .section-title { font-size: 13px; color: #64748b; margin-bottom: 8px; font-weight: 600; }
+  .info-box { background: #1e293b; border-radius: 12px; padding: 14px; margin-bottom: 16px; font-size: 13px; color: #94a3b8; line-height: 1.8; }
 </style>
 </head>
 <body>
@@ -70,10 +76,11 @@
     <button id="back-btn" onclick="goBack()">←</button>
     <h1 id="header-title">✈️ 出張費まとめ</h1>
     <button id="header-action"></button>
+    <button id="menu-btn" onclick="showScreen('menu', null)">☰</button>
   </header>
   <main>
     <div id="screen-list" class="screen active">
-      <button class="btn-primary" onclick="showScreen('newTrip')">＋ 出張を追加</button>
+      <button class="btn-primary" onclick="showScreen('newTrip', null)">＋ 出張を追加</button>
       <div id="trip-list"></div>
     </div>
     <div id="screen-newTrip" class="screen">
@@ -113,6 +120,21 @@
       <div id="compare-list"></div>
       <div id="compare-table"></div>
     </div>
+    <div id="screen-menu" class="screen">
+      <div class="info-box">
+        アプリを更新する前に「データを書き出す」でバックアップを取ってください。更新後に「データを読み込む」で復元できます。
+      </div>
+      <p class="section-title">バックアップ</p>
+      <button class="btn-secondary" onclick="exportData()">📤 データを書き出す</button>
+      <button class="btn-warning" onclick="showScreen('import', null)">📥 データを読み込む</button>
+    </div>
+    <div id="screen-import" class="screen">
+      <div class="form">
+        <label>書き出したデータを貼り付けてください</label>
+        <textarea id="import-text" placeholder="ここにデータを貼り付け..."></textarea>
+        <button class="btn-primary" onclick="importData()">読み込む</button>
+      </div>
+    </div>
   </main>
 </div>
 <script>
@@ -141,22 +163,26 @@ function showScreen(name, expId) {
   currentScreen = name;
   const backBtn = document.getElementById('back-btn');
   const actionBtn = document.getElementById('header-action');
+  const menuBtn = document.getElementById('menu-btn');
   const title = document.getElementById('header-title');
   backBtn.style.display = 'none';
   actionBtn.style.display = 'none';
+  menuBtn.style.display = 'block';
+
   if (name === 'list') {
     title.textContent = '✈️ 出張費まとめ';
     if (trips.length >= 2) { actionBtn.style.display = 'block'; actionBtn.textContent = '比較'; actionBtn.onclick = () => { compareIds = []; showScreen('compare', null); renderCompare(); }; }
     renderList();
   } else if (name === 'newTrip') {
-    title.textContent = '新しい出張'; backBtn.style.display = 'block';
+    title.textContent = '新しい出張'; backBtn.style.display = 'block'; menuBtn.style.display = 'none';
     document.getElementById('trip-date').value = new Date().toISOString().slice(0, 10);
     document.getElementById('trip-name').value = '';
   } else if (name === 'detail') {
     const t = trips.find(x => x.id === currentTripId);
-    title.textContent = t ? t.name : ''; backBtn.style.display = 'block'; renderDetail();
+    title.textContent = t ? t.name : ''; backBtn.style.display = 'block'; menuBtn.style.display = 'none';
+    renderDetail();
   } else if (name === 'editExpense') {
-    backBtn.style.display = 'block';
+    backBtn.style.display = 'block'; menuBtn.style.display = 'none';
     editingExpId = expId;
     if (expId) {
       title.textContent = '費用を編集';
@@ -177,13 +203,21 @@ function showScreen(name, expId) {
     }
     renderCatGrid();
   } else if (name === 'compare') {
-    title.textContent = '出張比較'; backBtn.style.display = 'block'; renderCompare();
+    title.textContent = '出張比較'; backBtn.style.display = 'block'; menuBtn.style.display = 'none';
+    renderCompare();
+  } else if (name === 'menu') {
+    title.textContent = 'メニュー'; backBtn.style.display = 'block'; menuBtn.style.display = 'none';
+  } else if (name === 'import') {
+    title.textContent = 'データを読み込む'; backBtn.style.display = 'block'; menuBtn.style.display = 'none';
+    document.getElementById('import-text').value = '';
   }
 }
 
 function goBack() {
-  if (currentScreen === 'detail' || currentScreen === 'compare') showScreen('list', null);
+  if (currentScreen === 'detail' || currentScreen === 'compare' || currentScreen === 'menu') showScreen('list', null);
   else if (currentScreen === 'editExpense') showScreen('detail', null);
+  else if (currentScreen === 'newTrip') showScreen('list', null);
+  else if (currentScreen === 'import') showScreen('menu', null);
   else showScreen('list', null);
 }
 
@@ -275,6 +309,33 @@ function toggleCompare(id) {
   if (compareIds.includes(id)) { compareIds = compareIds.filter(x => x !== id); }
   else if (compareIds.length < 3) { compareIds.push(id); }
   renderCompare();
+}
+
+function exportData() {
+  const data = JSON.stringify(trips);
+  const blob = new Blob([data], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = '出張費データ_' + new Date().toISOString().slice(0,10) + '.json';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function importData() {
+  const text = document.getElementById('import-text').value.trim();
+  if (!text) { alert('データを貼り付けてください'); return; }
+  try {
+    const data = JSON.parse(text);
+    if (!Array.isArray(data)) throw new Error();
+    if (!confirm(`${data.length}件の出張データを読み込みます。現在のデータは上書きされます。よろしいですか？`)) return;
+    trips = data;
+    save();
+    alert('読み込みが完了しました！');
+    showScreen('list', null);
+  } catch {
+    alert('データの形式が正しくありません。書き出したデータをそのまま貼り付けてください。');
+  }
 }
 
 if ('serviceWorker' in navigator) {

@@ -16,10 +16,13 @@
   header { background: #1e293b; border-bottom: 1px solid #334155; position: sticky; top: 0; z-index: 10; padding: 14px 16px; display: flex; align-items: center; gap: 12px; }
   header h1 { font-size: 18px; font-weight: 700; flex: 1; }
   #back-btn { background: none; border: none; color: #60a5fa; font-size: 22px; cursor: pointer; padding: 0 4px; display: none; }
+  #menu-btn { background: none; border: none; color: #94a3b8; font-size: 22px; cursor: pointer; padding: 0 4px; }
   main { flex: 1; padding: 16px; overflow-y: auto; }
   .screen { display: none; }
   .screen.active { display: block; }
   .btn-primary { width: 100%; padding: 14px; background: #059669; color: #fff; border: none; border-radius: 12px; font-size: 16px; font-weight: 700; cursor: pointer; margin-bottom: 16px; }
+  .btn-secondary { width: 100%; padding: 12px; background: #334155; color: #e2e8f0; border: none; border-radius: 12px; font-size: 14px; font-weight: 600; cursor: pointer; margin-bottom: 10px; }
+  .btn-warning { width: 100%; padding: 12px; background: transparent; color: #f59e0b; border: 1px solid #f59e0b; border-radius: 12px; font-size: 14px; cursor: pointer; margin-bottom: 10px; }
   .month-nav { display: flex; align-items: center; justify-content: space-between; background: #1e293b; border-radius: 12px; padding: 12px 16px; margin-bottom: 16px; }
   .month-nav button { background: none; border: none; color: #60a5fa; font-size: 22px; cursor: pointer; padding: 0 8px; }
   .month-label { font-size: 18px; font-weight: 700; color: #e2e8f0; }
@@ -41,13 +44,16 @@
   .del-btn { flex: 1; padding: 8px; background: #334155; border: none; border-radius: 8px; color: #ef4444; font-size: 13px; cursor: pointer; }
   .form { display: flex; flex-direction: column; gap: 12px; }
   .form label { font-size: 13px; color: #94a3b8; font-weight: 600; }
-  .form input { padding: 13px 14px; background: #1e293b; border: 1px solid #334155; border-radius: 10px; color: #e2e8f0; font-size: 16px; outline: none; width: 100%; }
+  .form input, .form textarea { padding: 13px 14px; background: #1e293b; border: 1px solid #334155; border-radius: 10px; color: #e2e8f0; font-size: 16px; outline: none; width: 100%; }
+  .form textarea { height: 120px; resize: none; font-size: 12px; }
   .cat-grid { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 8px; }
   .cat-btn { padding: 10px 4px; background: #1e293b; border: 2px solid #334155; border-radius: 10px; color: #94a3b8; font-size: 12px; cursor: pointer; line-height: 1.6; transition: all 0.15s; text-align: center; }
   .cat-btn.active { color: #fff; }
   .empty { text-align: center; color: #64748b; padding: 40px 0; }
   .legend-row { display: flex; align-items: center; gap: 6px; }
   .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
+  .section-title { font-size: 13px; color: #64748b; margin-bottom: 8px; font-weight: 600; }
+  .info-box { background: #1e293b; border-radius: 12px; padding: 14px; margin-bottom: 16px; font-size: 13px; color: #94a3b8; line-height: 1.8; }
 </style>
 </head>
 <body>
@@ -55,6 +61,7 @@
   <header>
     <button id="back-btn" onclick="goBack()">←</button>
     <h1 id="header-title">💰 個人支出まとめ</h1>
+    <button id="menu-btn" onclick="showScreen('menu', null)">☰</button>
   </header>
   <main>
     <div id="screen-list" class="screen active">
@@ -72,6 +79,7 @@
       <button class="btn-primary" onclick="showScreen('editExpense', null)">＋ レシートを入力</button>
       <div id="expense-list"></div>
     </div>
+
     <div id="screen-editExpense" class="screen">
       <div class="form">
         <label>日付</label>
@@ -83,6 +91,23 @@
         <label>お店・メモ（任意）</label>
         <input id="exp-memo" type="text" placeholder="例：スーパー、コンビニ">
         <button class="btn-primary" style="margin-top:4px" id="save-btn" onclick="saveExpense()">追加する</button>
+      </div>
+    </div>
+
+    <div id="screen-menu" class="screen">
+      <div class="info-box">
+        アプリを更新する前に「データを書き出す」でバックアップを取ってください。更新後に「データを読み込む」で復元できます。
+      </div>
+      <p class="section-title">バックアップ</p>
+      <button class="btn-secondary" onclick="exportData()">📤 データを書き出す</button>
+      <button class="btn-warning" onclick="showScreen('import', null)">📥 データを読み込む</button>
+    </div>
+
+    <div id="screen-import" class="screen">
+      <div class="form">
+        <label>書き出したデータを貼り付けてください</label>
+        <textarea id="import-text" placeholder="ここにデータを貼り付け..."></textarea>
+        <button class="btn-primary" onclick="importData()">読み込む</button>
       </div>
     </div>
   </main>
@@ -126,16 +151,16 @@ function showScreen(name, expId) {
   document.getElementById('screen-' + name).classList.add('active');
   currentScreen = name;
   const backBtn = document.getElementById('back-btn');
+  const menuBtn = document.getElementById('menu-btn');
   const title = document.getElementById('header-title');
+  backBtn.style.display = 'none';
+  menuBtn.style.display = 'block';
   if (name === 'list') {
-    backBtn.style.display = 'none';
-    title.textContent = '💰 個人支出まとめ';
-    renderList();
+    title.textContent = '💰 個人支出まとめ'; renderList();
   } else if (name === 'editExpense') {
-    backBtn.style.display = 'block';
+    backBtn.style.display = 'block'; menuBtn.style.display = 'none';
     editingId = expId;
     if (expId) {
-      // 編集モード
       title.textContent = '支出を編集';
       document.getElementById('save-btn').textContent = '保存する';
       const e = expenses.find(x => x.id === expId);
@@ -144,7 +169,6 @@ function showScreen(name, expId) {
       document.getElementById('exp-memo').value = e.memo || '';
       selectedCat = e.category;
     } else {
-      // 新規モード
       title.textContent = 'レシートを入力';
       document.getElementById('save-btn').textContent = '追加する';
       document.getElementById('exp-date').value = new Date().toISOString().slice(0, 10);
@@ -153,10 +177,21 @@ function showScreen(name, expId) {
       selectedCat = 'food';
     }
     renderCatGrid();
+  } else if (name === 'menu') {
+    backBtn.style.display = 'block'; menuBtn.style.display = 'none';
+    title.textContent = 'メニュー';
+  } else if (name === 'import') {
+    backBtn.style.display = 'block'; menuBtn.style.display = 'none';
+    title.textContent = 'データを読み込む';
+    document.getElementById('import-text').value = '';
   }
 }
 
-function goBack() { showScreen('list', null); }
+function goBack() {
+  if (currentScreen === 'editExpense' || currentScreen === 'menu') showScreen('list', null);
+  else if (currentScreen === 'import') showScreen('menu', null);
+  else showScreen('list', null);
+}
 
 function renderList() {
   document.getElementById('month-label').textContent = `${viewYear}年${viewMonth + 1}月`;
@@ -194,11 +229,9 @@ function saveExpense() {
   const date = document.getElementById('exp-date').value;
   if (!amount || isNaN(amount)) { alert('金額を入力してください'); return; }
   if (editingId) {
-    // 編集
     const idx = expenses.findIndex(x => x.id === editingId);
     if (idx !== -1) { expenses[idx] = { ...expenses[idx], date, category: selectedCat, amount, memo }; }
   } else {
-    // 新規
     expenses.push({ id: genId(), date, category: selectedCat, amount, memo });
   }
   save();
@@ -209,6 +242,33 @@ function saveExpense() {
 function deleteExpense(id) {
   if (!confirm('この支出を削除しますか？')) return;
   expenses = expenses.filter(e => e.id !== id); save(); renderList();
+}
+
+function exportData() {
+  const data = JSON.stringify(expenses);
+  const blob = new Blob([data], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = '個人支出データ_' + new Date().toISOString().slice(0,10) + '.json';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function importData() {
+  const text = document.getElementById('import-text').value.trim();
+  if (!text) { alert('データを貼り付けてください'); return; }
+  try {
+    const data = JSON.parse(text);
+    if (!Array.isArray(data)) throw new Error();
+    if (!confirm(`${data.length}件のデータを読み込みます。現在のデータは上書きされます。よろしいですか？`)) return;
+    expenses = data;
+    save();
+    alert('読み込みが完了しました！');
+    showScreen('list', null);
+  } catch {
+    alert('データの形式が正しくありません。書き出したデータをそのまま貼り付けてください。');
+  }
 }
 
 if ('serviceWorker' in navigator) {
