@@ -36,7 +36,9 @@
   .exp-amount { font-size: 20px; font-weight: 700; color: #e2e8f0; }
   .exp-date { font-size: 12px; color: #64748b; margin-top: 4px; }
   .exp-memo { font-size: 13px; color: #64748b; margin-top: 4px; }
-  .del-btn { background: none; border: none; font-size: 18px; cursor: pointer; padding: 4px; }
+  .action-row { display: flex; gap: 8px; margin-top: 10px; }
+  .edit-btn { flex: 1; padding: 8px; background: #334155; border: none; border-radius: 8px; color: #60a5fa; font-size: 13px; cursor: pointer; }
+  .del-btn { flex: 1; padding: 8px; background: #334155; border: none; border-radius: 8px; color: #ef4444; font-size: 13px; cursor: pointer; }
   .form { display: flex; flex-direction: column; gap: 12px; }
   .form label { font-size: 13px; color: #94a3b8; font-weight: 600; }
   .form input { padding: 13px 14px; background: #1e293b; border: 1px solid #334155; border-radius: 10px; color: #e2e8f0; font-size: 16px; outline: none; width: 100%; }
@@ -67,10 +69,10 @@
         <div class="bar-row" id="list-bar"></div>
         <div class="cat-breakdown" id="list-breakdown"></div>
       </div>
-      <button class="btn-primary" onclick="showScreen('newExpense')">＋ レシートを入力</button>
+      <button class="btn-primary" onclick="showScreen('editExpense', null)">＋ レシートを入力</button>
       <div id="expense-list"></div>
     </div>
-    <div id="screen-newExpense" class="screen">
+    <div id="screen-editExpense" class="screen">
       <div class="form">
         <label>日付</label>
         <input id="exp-date" type="date">
@@ -80,7 +82,7 @@
         <input id="exp-amount" type="number" inputmode="numeric" placeholder="例：1280">
         <label>お店・メモ（任意）</label>
         <input id="exp-memo" type="text" placeholder="例：スーパー、コンビニ">
-        <button class="btn-primary" style="margin-top:4px" onclick="addExpense()">追加する</button>
+        <button class="btn-primary" style="margin-top:4px" id="save-btn" onclick="saveExpense()">追加する</button>
       </div>
     </div>
   </main>
@@ -97,10 +99,12 @@ const CATS = [
 ];
 let expenses = JSON.parse(localStorage.getItem('personal_expenses') || '[]');
 let selectedCat = 'food';
+let editingId = null;
 let currentScreen = 'list';
 const now = new Date();
 let viewYear = now.getFullYear();
 let viewMonth = now.getMonth();
+
 function save() { localStorage.setItem('personal_expenses', JSON.stringify(expenses)); }
 function genId() { return Date.now().toString(36) + Math.random().toString(36).slice(2); }
 function yen(n) { return '¥' + Number(n).toLocaleString('ja-JP'); }
@@ -109,28 +113,51 @@ function monthExpenses() {
 }
 function total(list) { return list.reduce((s, e) => s + e.amount, 0); }
 function catTotal(list, cat) { return list.filter(e => e.category === cat).reduce((s, e) => s + e.amount, 0); }
+
 function changeMonth(dir) {
   viewMonth += dir;
   if (viewMonth > 11) { viewMonth = 0; viewYear++; }
-  if (viewMonth < 0)  { viewMonth = 11; viewYear--; }
+  if (viewMonth < 0) { viewMonth = 11; viewYear--; }
   renderList();
 }
-function showScreen(name) {
+
+function showScreen(name, expId) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById('screen-' + name).classList.add('active');
   currentScreen = name;
   const backBtn = document.getElementById('back-btn');
   const title = document.getElementById('header-title');
-  if (name === 'list') { backBtn.style.display = 'none'; title.textContent = '💰 個人支出まとめ'; renderList(); }
-  else if (name === 'newExpense') {
-    backBtn.style.display = 'block'; title.textContent = 'レシートを入力';
-    document.getElementById('exp-date').value = new Date().toISOString().slice(0, 10);
-    document.getElementById('exp-amount').value = '';
-    document.getElementById('exp-memo').value = '';
-    selectedCat = 'food'; renderCatGrid();
+  if (name === 'list') {
+    backBtn.style.display = 'none';
+    title.textContent = '💰 個人支出まとめ';
+    renderList();
+  } else if (name === 'editExpense') {
+    backBtn.style.display = 'block';
+    editingId = expId;
+    if (expId) {
+      // 編集モード
+      title.textContent = '支出を編集';
+      document.getElementById('save-btn').textContent = '保存する';
+      const e = expenses.find(x => x.id === expId);
+      document.getElementById('exp-date').value = e.date;
+      document.getElementById('exp-amount').value = e.amount;
+      document.getElementById('exp-memo').value = e.memo || '';
+      selectedCat = e.category;
+    } else {
+      // 新規モード
+      title.textContent = 'レシートを入力';
+      document.getElementById('save-btn').textContent = '追加する';
+      document.getElementById('exp-date').value = new Date().toISOString().slice(0, 10);
+      document.getElementById('exp-amount').value = '';
+      document.getElementById('exp-memo').value = '';
+      selectedCat = 'food';
+    }
+    renderCatGrid();
   }
 }
-function goBack() { showScreen('list'); }
+
+function goBack() { showScreen('list', null); }
+
 function renderList() {
   document.getElementById('month-label').textContent = `${viewYear}年${viewMonth + 1}月`;
   const list = monthExpenses();
@@ -140,30 +167,54 @@ function renderList() {
   document.getElementById('list-breakdown').innerHTML = CATS.filter(c => catTotal(list, c.id) > 0).map(c => `<div class="cat-row"><div class="legend-row"><span class="dot" style="background:${c.color}"></span><span>${c.emoji} ${c.label}</span></div><span style="color:${c.color};font-weight:700">${yen(catTotal(list, c.id))}</span></div>`).join('') || '<div style="text-align:center;color:#64748b;font-size:13px">まだ入力がありません</div>';
   const el = document.getElementById('expense-list');
   if (list.length === 0) { el.innerHTML = '<div class="empty"><p>レシートがまだありません</p></div>'; return; }
-  el.innerHTML = list.map(e => { const cat = CATS.find(c => c.id === e.category); const d = new Date(e.date); return `<div class="exp-card"><div class="exp-badge" style="background:${cat.color}">${cat.emoji} ${cat.label}</div><div class="exp-row"><span class="exp-amount">${yen(e.amount)}</span><button class="del-btn" onclick="deleteExpense('${e.id}')">🗑</button></div><div class="exp-date">${d.getMonth()+1}/${d.getDate()}</div>${e.memo ? `<div class="exp-memo">${e.memo}</div>` : ''}</div>`; }).join('');
+  el.innerHTML = list.map(e => {
+    const cat = CATS.find(c => c.id === e.category);
+    const d = new Date(e.date);
+    return `<div class="exp-card">
+      <div class="exp-badge" style="background:${cat.color}">${cat.emoji} ${cat.label}</div>
+      <div class="exp-row"><span class="exp-amount">${yen(e.amount)}</span></div>
+      <div class="exp-date">${d.getMonth()+1}/${d.getDate()}</div>
+      ${e.memo ? `<div class="exp-memo">${e.memo}</div>` : ''}
+      <div class="action-row">
+        <button class="edit-btn" onclick="showScreen('editExpense','${e.id}')">✏️ 編集</button>
+        <button class="del-btn" onclick="deleteExpense('${e.id}')">🗑 削除</button>
+      </div>
+    </div>`;
+  }).join('');
 }
+
 function renderCatGrid() {
   document.getElementById('cat-grid').innerHTML = CATS.map(c => `<button class="cat-btn ${selectedCat === c.id ? 'active' : ''}" style="${selectedCat === c.id ? `background:${c.color};border-color:${c.color}` : ''}" onclick="selectCat('${c.id}')">${c.emoji}<br>${c.label}</button>`).join('');
 }
 function selectCat(id) { selectedCat = id; renderCatGrid(); }
-function addExpense() {
+
+function saveExpense() {
   const amount = Number(document.getElementById('exp-amount').value);
   const memo = document.getElementById('exp-memo').value.trim();
   const date = document.getElementById('exp-date').value;
   if (!amount || isNaN(amount)) { alert('金額を入力してください'); return; }
-  expenses.push({ id: genId(), date, category: selectedCat, amount, memo });
+  if (editingId) {
+    // 編集
+    const idx = expenses.findIndex(x => x.id === editingId);
+    if (idx !== -1) { expenses[idx] = { ...expenses[idx], date, category: selectedCat, amount, memo }; }
+  } else {
+    // 新規
+    expenses.push({ id: genId(), date, category: selectedCat, amount, memo });
+  }
   save();
   const d = new Date(date); viewYear = d.getFullYear(); viewMonth = d.getMonth();
-  showScreen('list');
+  showScreen('list', null);
 }
+
 function deleteExpense(id) {
   if (!confirm('この支出を削除しますか？')) return;
   expenses = expenses.filter(e => e.id !== id); save(); renderList();
 }
+
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('/my-apps/sw.js').catch(() => {});
 }
-showScreen('list');
+showScreen('list', null);
 </script>
 </body>
 </html>
